@@ -6,58 +6,58 @@ const path = require('path');
 const fs = require('fs');
 const Book = require('../models/Book');
 
-// Ajout livre avec image
+// Ajout d'un livre
 router.post('/', upload.single('image'), async (req, res) => {
   try {
-    const { title, author, description } = req.body;
+    const { title, author, year, genre, rating, userId } = req.body;
 
-    if (!title || !author || !description) {
+    // Validation des champs obligatoires
+    if (!title || !author || !year || !genre) {
       return res.status(400).json({ message: 'Tous les champs sont requis.' });
     }
 
-    let imageUrl = '';
-
-    if (req.file) {
-      // Définir le chemin de l'image originale et optimisée
-      const originalImagePath = req.file.path;
-      const optimizedImagePath = path.join(__dirname, '../images', `optimized-${req.file.filename}`);
-
-      // Optimiser l'image
-      await sharp(originalImagePath)
-        .resize(800)
-        .toFile(optimizedImagePath);
-
-      // Supprimer image originale
-      fs.unlinkSync(originalImagePath);
-
-      // Définir l'URL de l'image optimisée
-      imageUrl = `${req.protocol}://${req.get('host')}/images/optimized-${req.file.filename}`;
-    } else {
+    // Vérification de la présence d'une image
+    if (!req.file) {
       return res.status(400).json({ message: 'Une image est requise.' });
     }
 
-    const book = new Book({
+    // Optimisation de l'image
+    const originalImagePath = req.file.path;
+    const optimizedImagePath = path.join(__dirname, '../images', `optimized-${req.file.filename}`);
+
+    await sharp(originalImagePath)
+      .resize(800)
+      .toFile(optimizedImagePath);
+
+    // Suppression de l'image originale
+    fs.unlinkSync(originalImagePath);
+
+    // Définir l'URL de l'image optimisée
+    const imageUrl = `${req.protocol}://${req.get('host')}/images/optimized-${req.file.filename}`;
+
+    // Créer un nouvel objet Book
+    const newBook = new Book({
       title,
       author,
-      description,
-      imageUrl,
+      year,
+      genre,
+      ratings: rating && userId ? [{ userId, rating: parseInt(rating, 10) }] : [],
     });
 
-    console.log('Livre à enregistrer:', book);
-
-    await book.save();
-    res.status(201).json({ message: 'Livre ajouté !', book });
+    await newBook.save();
+    res.status(201).json({ message: 'Livre ajouté avec succès !', book: newBook });
   } catch (error) {
     console.error('Erreur lors de l’ajout du livre:', error);
     res.status(500).send('Erreur lors de l’ajout du livre.');
   }
 });
 
-// Ajouter une notation
+// Ajouter une notation à un livre
 router.post('/:id/rate', async (req, res) => {
   try {
     const { userId, rating } = req.body;
 
+    // Validation des champs requis
     if (!userId || rating === undefined) {
       return res.status(400).json({ message: 'userId et rating sont requis.' });
     }
@@ -66,7 +66,7 @@ router.post('/:id/rate', async (req, res) => {
     if (!book) return res.status(404).send('Livre non trouvé !');
 
     // Ajouter la notation
-    book.ratings.push({ userId, rating });
+    book.ratings.push({ userId, rating: parseInt(rating, 10) });
 
     // Recalculer la note moyenne
     const averageRating = book.ratings.reduce((sum, r) => sum + r.rating, 0) / book.ratings.length;
