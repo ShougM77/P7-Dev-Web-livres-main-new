@@ -1,82 +1,107 @@
 const express = require('express');
 const router = express.Router();
-const upload = require('../middleware/multer');
+const upload = require('../middleware/multer'); // Middleware Multer pour les fichiers
 const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
 const Book = require('../models/Book');
 
-// Ajout d'un livre
+// Ajout d'un nouveau livre avec image
 router.post('/', upload.single('image'), async (req, res) => {
   try {
-    const { title, author, year, genre, rating, userId } = req.body;
+    const { title, author, year, genre, rating } = req.body;
 
     // Validation des champs obligatoires
     if (!title || !author || !year || !genre) {
       return res.status(400).json({ message: 'Tous les champs sont requis.' });
     }
 
-    // Vérification de la présence d'une image
-    if (!req.file) {
-      return res.status(400).json({ message: 'Une image est requise.' });
+    let imageUrl = '';
+
+    if (req.file) {
+      const originalImagePath = req.file.path;
+      const optimizedImagePath = path.join(__dirname, '../images', `optimized-${req.file.filename}`);
+
+      // Optimiser l'image avec Sharp
+      await sharp(originalImagePath)
+        .resize(800)
+        .toFile(optimizedImagePath);
+
+      // Supprimer l'image originale après optimisation
+      if (fs.existsSync(originalImagePath)) {
+        fs.unlinkSync(originalImagePath);
+      }
+
+      imageUrl = `${req.protocol}://${req.get('host')}/images/optimized-${req.file.filename}`;
     }
 
-    // Optimisation de l'image
-    const originalImagePath = req.file.path;
-    const optimizedImagePath = path.join(__dirname, '../images', `optimized-${req.file.filename}`);
-
-    await sharp(originalImagePath)
-      .resize(800)
-      .toFile(optimizedImagePath);
-
-    // Suppression de l'image originale
-    fs.unlinkSync(originalImagePath);
-
-    // Définir l'URL de l'image optimisée
-    const imageUrl = `${req.protocol}://${req.get('host')}/images/optimized-${req.file.filename}`;
-
-    // Créer un nouvel objet Book
     const newBook = new Book({
       title,
       author,
       year,
       genre,
-      ratings: rating && userId ? [{ userId, rating: parseInt(rating, 10) }] : [],
+      imageUrl,
+      ratings: rating ? [{ userId: req.body.userId, rating: parseInt(rating, 10) }] : [],
     });
 
     await newBook.save();
     res.status(201).json({ message: 'Livre ajouté avec succès !', book: newBook });
   } catch (error) {
     console.error('Erreur lors de l’ajout du livre:', error);
-    res.status(500).send('Erreur lors de l’ajout du livre.');
+    res.status(500).json({ message: 'Erreur lors de l’ajout du livre.' });
   }
 });
 
-// Ajouter une notation à un livre
-router.post('/:id/rate', async (req, res) => {
+// Mise à jour d'un livre existant
+router.put('/:id', upload.single('image'), async (req, res) => {
   try {
-    const { userId, rating } = req.body;
+    const { title, author, year, genre, rating } = req.body;
+    const book = await Book.findById(req.params.id);
 
-    // Validation des champs requis
-    if (!userId || rating === undefined) {
-      return res.status(400).json({ message: 'userId et rating sont requis.' });
+    if (!book) {
+      return res.status(404).json({ message: 'Livre non trouvé.' });
     }
 
-    const book = await Book.findById(req.params.id);
-    if (!book) return res.status(404).send('Livre non trouvé !');
+    let imageUrl = book.imageUrl;
 
-    // Ajouter la notation
-    book.ratings.push({ userId, rating: parseInt(rating, 10) });
+    if (req.file) {
+      const originalImagePath = req.file.path;
+      const optimizedImagePath = path.join(__dirname, '../images', `optimized-${req.file.filename}`);
 
-    // Recalculer la note moyenne
-    const averageRating = book.ratings.reduce((sum, r) => sum + r.rating, 0) / book.ratings.length;
-    book.averageRating = averageRating;
+      await sharp(originalImagePath)
+        .resize(800)
+        .toFile(optimizedImagePath);
+
+      if (fs.existsSync(originalImagePath)) {
+        fs.unlinkSync(originalImagePath);
+      }
+
+      imageUrl = `${req.protocol}://${req.get('host')}/images/optimized-${req.file.filename}`;
+    }
+
+    book.title = title || book.title;
+    book.author = author || book.author;
+    book.year = year || book.year;
+    book.genre = genre || book.genre;
+    book.imageUrl = imageUrl;
+
+    if (rating) {
+      const userRating = book.ratings.find((r) => r.userId.toString() === req.body.userId);
+      if (userRating) {
+        userRating.rating = parseInt(rating, 10);
+      } else {
+        book.ratings.push({ userId: req.body.userId, rating: parseInt(rating, 10) });
+      }
+
+      // Recalculer la note moyenne
+      book.calculateAverageRating();
+    }
 
     await book.save();
-    res.status(200).json({ message: 'Notation ajoutée !', book });
+    res.status(200).json({ message: 'Livre mis à jour avec succès !', book });
   } catch (error) {
-    console.error('Erreur lors de l’ajout de la notation:', error);
-    res.status(500).send('Erreur lors de l’ajout de la notation.');
+    console.error('Erreur lors de la mise à jour du livre:', error);
+    res.status(500).json({ message: 'Erreur lors de la mise à jour du livre.' });
   }
 });
 
