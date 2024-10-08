@@ -1,3 +1,5 @@
+require('dotenv').config(); // Charger les variables d'environnement
+
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
@@ -12,7 +14,7 @@ app.use(cors());
 
 app.use(express.json());
 
-// Connexion MongoDB
+// Connexion MongoDB (toujours en dur comme vous l'avez demandé)
 mongoose.connect(
   'mongodb+srv://Mongotest:Mongotest@cluster0.4rsri.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
 )

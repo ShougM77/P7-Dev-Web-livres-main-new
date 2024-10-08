@@ -6,16 +6,22 @@ const router = express.Router();
 
 // Inscription
 router.post('/signup', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).send('Email et mot de passe requis.');
+  }
+
   try {
-    const hashedPassword = await bcrypt.hash(req.body.password, 10);
-    const user = new User({
-      password: hashedPassword,
-      email: req.body.email
-    });
-    console.log(user);
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({ password: hashedPassword, email });
+
     await user.save();
     res.status(201).send('Utilisateur créé !');
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).send('Email déjà utilisé.');
+    }
     console.log(error);
     res.status(500).send('Erreur lors de la création de l’utilisateur.');
   }
@@ -23,12 +29,19 @@ router.post('/signup', async (req, res) => {
 
 // Connexion
 router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).send('Email et mot de passe requis.');
+  }
+
   try {
-    // Trouver l'utilisateur par l'email
-    const user = await User.findOne({ email: req.body.email });
-    if (user && await bcrypt.compare(req.body.password, user.password)) {
-      // Créer un token JWT
-      const token = jwt.sign({ id: user._id }, 'secret', { expiresIn: '1h' });
+    const user = await User.findOne({ email });
+    if (user && await bcrypt.compare(password, user.password)) {
+      const token = jwt.sign(
+        { userId: user._id }, // Utilisation de userId pour correspondre au middleware
+        process.env.JWT_SECRET_KEY // Clé secrète pour le token
+      );
       res.json({ token });
     } else {
       res.status(401).send('Identifiants incorrects.');
