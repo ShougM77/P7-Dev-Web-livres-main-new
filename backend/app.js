@@ -1,31 +1,31 @@
-//IMPORTATION DU MODULE EXPRESS
+// importation du module express
 const express = require("express");
 
-//CRÉATION DE L'APPLICATION EXPRESS
+// création de l'application express
 const app = express();
 
-//ACCÈS AU PATH DU SERVEUR
+// accès au chemin des fichiers
 const path = require('path');
 
-//CHARGEMENT VARIABLES D'ENVIRONNEMENT
+// chargement des variables d'environnement
 require('dotenv').config();
 
-//IMPORTATION DES ROUTES POUR LES LIVRES ET LES UTILISATEURS
+// importation des routes pour les livres et utilisateurs
 const bookRoutes = require("./routes/bookRoutes");
 const userRoutes = require("./routes/userRoutes");
 
-//IMPORTATION DU MODULE MONGOOSE POUR LA CONNEXION À LA BASE DE DONNÉES MONGODB
+// importation de mongoose pour connecter à MongoDB
 const mongoose = require('mongoose');
 
-//CONNEXION À LA BASE DE DONNÉES
+// connexion à MongoDB
 mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connexion à MongoDB réussie !'))
-  .catch(() => console.log('Connexion à MongoDB échouée !'));
+  .then(() => console.log('Connexion réussie à MongoDB !'))
+  .catch(() => console.log('Échec de la connexion à MongoDB !'));
 
-//REMPLACEMENT DE BODY PARSER POUR ACCÉDER AU CORPS DE LA REQUÊTE
+// parse les données JSON dans les requêtes
 app.use(express.json());
 
-//MIDDLEWARE POUR GÉRER LES CORS
+// middleware pour gérer les CORS
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' data:;");
@@ -34,10 +34,10 @@ app.use((req, res, next) => {
   next();
 });
 
-//UTILISATION DES ROUTES POUR LES IMAGES, LES LIVRES ET LES UTILISATEURS
+// routes pour les livres, utilisateurs et images
 app.use('/api/books', bookRoutes);
 app.use('/api/auth', userRoutes);
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
-//EXPORTATION DE L'APPLICATION
+// exportation de l'application
 module.exports = app;

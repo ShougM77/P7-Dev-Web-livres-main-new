@@ -1,45 +1,39 @@
-//IMPORTATION DU MODULE EXPRESS
+// importation du module express
 const express = require("express");
 
-//CONTROLLER
+// controller
 const bookController = require("../controllers/books");
 
-//IMPORTATION MIDDLEWARE AUTH
+// importation middleware auth
 const auth = require("../middleware/auth");
 
-/* MULTER - IMPORTATION MIDDLEWARE UPLOAD & MODIFICATIONIMAGE*/
+/* multer - importation middleware upload & modificationImage */
+const { upload, modificationImage } = require('../middleware/multer');
 
-    const {upload, modificationImage} = require('../middleware/multer');
-    
-/* FIN MULTER */
 
-//CRÉATION D'UN ROUTEUR EXPRESS
+// création d'un routeur express
 const router = express.Router();
 
-/* MÉTHODES */
+// récupération de tous les livres
+router.get("/", bookController.getAllBooks);
 
-    //RÉCUPÉRATION DE TOUS LES LIVRES
-    router.get("/", bookController.getAllBooks);
+// récupération des trois livres les mieux notés
+router.get("/bestrating", bookController.getBestThree);
 
-    //RÉCUPÉRATION DES TROIS LIVRES LES MIEUX NOTÉS
-    router.get("/bestrating", bookController.getBestThree);
+// récupération d'un livre
+router.get("/:id", bookController.getBook);
 
-    //RÉCUPÉRATION D'UN LIVRE
-    router.get("/:id", bookController.getBook);
+// enregistrement d'un livre
+router.post("/", auth, upload, modificationImage, bookController.createBook);
 
-    //ENREGISTREMENT D'UN LIVRE
-    router.post("/", auth, upload, modificationImage, bookController.createBook);
+// mise à jour d'un livre
+router.put("/:id", auth, upload, modificationImage, bookController.updateBook);
 
-    //MISE À JOUR D'UN LIVRE
-    router.put("/:id", auth, upload, modificationImage, bookController.updateBook);
+// suppression d'un livre
+router.delete("/:id", auth, bookController.deleteBook);
 
-    //SUPPRESSION D'UN LIVRE
-    router.delete("/:id", auth, bookController.deleteBook);
+// notation d'un livre
+router.post("/:id/rating", auth, bookController.rateBook);
 
-    //NOTATION D'UN LIVRE
-    router.post("/:id/rating", auth, bookController.rateBook);
-
-/* FIN MÉTHODES */
-
-//EXPORTATION DU ROUTEUR
+// exportation du routeur
 module.exports = router;

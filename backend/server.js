@@ -1,49 +1,32 @@
-//IMPORTATION DU MODULE HTTP
+// importation du module http
 const http = require('http');
 
-//IMPORTATION DE L'APPLICATION
+// importation de l'application express
 const app = require('./app');
 
-//FONCTION DE NORMALISATION DU PORT D'ÉCOUTE
+// fonction pour normaliser le port
 const normalizePort = val => {
-    
     const port = parseInt(val, 10);
-    
-    if(isNaN(port)) 
-    {
-        return val;
-    }
-    
-    if(port >= 0) 
-    {
-        return port;
-    }
-    
-    return false;
+    if (isNaN(port)) return val;
+    return port >= 0 ? port : false;
 };
 
-//DÉFINITION DU PORT D'ÉCOUTE (process.env.PORT ou le port 4000)
+// définition du port d'écoute
 const port = normalizePort(process.env.PORT || '4000');
 app.set('port', port);
 
-//FONCTION DE GESTION D'ERREURS POUR LES ERREURS LIÉES AU SERVEUR
+// gestion des erreurs du serveur
 const errorHandler = error => {
-    if(error.syscall !== 'listen') 
-    {
-        throw error;
-    }
+    if (error.syscall !== 'listen') throw error;
     const address = server.address();
-    
     const bind = typeof address === 'string' ? 'pipe ' + address : 'port ' + port;
-    
-    switch(error.code) 
-    {
+    switch (error.code) {
         case 'EACCES':
-            console.error(bind + ' requires elevated privileges.');
+            console.error(`${bind} requires elevated privileges.`);
             process.exit(1);
             break;
         case 'EADDRINUSE':
-            console.error(bind + ' is already in use.');
+            console.error(`${bind} is already in use.`);
             process.exit(1);
             break;
         default:
@@ -51,18 +34,16 @@ const errorHandler = error => {
     }
 };
 
-//CRÉATION DU SERVEUR HTTP
+// création du serveur http
 const server = http.createServer(app);
 
-//GESTION DES ERREURS DU SERVEUR
+// gestion des erreurs et démarrage du serveur
 server.on('error', errorHandler);
 server.on('listening', () => {
-
     const address = server.address();
     const bind = typeof address === 'string' ? 'pipe ' + address : 'port ' + port;
     console.log('Listening on ' + bind);
-
 });
 
-//DÉMARRAGE DU SERVEUR EN ÉCOUTANT LE PORT SPÉCIFIÉ
+// démarrage du serveur
 server.listen(port);

@@ -1,21 +1,15 @@
-//IMPORTATION DU MODULE EXPRESS
+// importation du module express
 const express = require("express");
 
-//CRÉATION D'UN ROUTEUR EXPRESS
+// création du routeur express
 const router = express.Router();
 
-//CONTROLLER
+// controller
 const userController = require("../controllers/userId");
 
-/* MÉTHODES */
+// routes
+router.post("/signup", userController.createUser);  // enregistrement d'un utilisateur
+router.post("/login", userController.logUser);      // connexion d'un utilisateur
 
-    //ENREGISTREMENT D'UN UTILISATEUR
-    router.post("/signup", userController.createUser);
-
-    //CONNEXION D'UN UTILISATEUR
-    router.post("/login", userController.logUser);
-
-/* FIN MÉTHODES */
-
-//EXPORTATION DU ROUTEUR
+// exportation du routeur
 module.exports = router;
