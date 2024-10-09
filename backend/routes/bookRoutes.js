@@ -2,14 +2,14 @@
 const express = require("express");
 
 //CONTROLLER
-const bookController = require("../controllers/bookController");
+const bookController = require("../controllers/books");
 
 //IMPORTATION MIDDLEWARE AUTH
 const auth = require("../middleware/auth");
 
 /* MULTER - IMPORTATION MIDDLEWARE UPLOAD & MODIFICATIONIMAGE*/
 
-    const {upload, modificationImage} = require('../middleware/multer-config');
+    const {upload, modificationImage} = require('../middleware/multer');
     
 /* FIN MULTER */
 

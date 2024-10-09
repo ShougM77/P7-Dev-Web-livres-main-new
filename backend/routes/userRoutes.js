@@ -5,7 +5,7 @@ const express = require("express");
 const router = express.Router();
 
 //CONTROLLER
-const userController = require("../controllers/userController");
+const userController = require("../controllers/userId");
 
 /* MÉTHODES */
 

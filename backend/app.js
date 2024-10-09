@@ -11,8 +11,8 @@ const path = require('path');
 require('dotenv').config();
 
 //IMPORTATION DES ROUTES POUR LES LIVRES ET LES UTILISATEURS
-const bookRoutes = require("./routes/bookRouter");
-const userRoutes = require("./routes/userRouter");
+const bookRoutes = require("./routes/bookRoutes");
+const userRoutes = require("./routes/userRoutes");
 
 //IMPORTATION DU MODULE MONGOOSE POUR LA CONNEXION À LA BASE DE DONNÉES MONGODB
 const mongoose = require('mongoose');
