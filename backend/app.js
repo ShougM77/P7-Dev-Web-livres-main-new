@@ -1,38 +1,43 @@
-require('dotenv').config(); // Charger les variables d'environnement
+//IMPORTATION DU MODULE EXPRESS
+const express = require("express");
 
-const express = require('express');
-const mongoose = require('mongoose');
-const path = require('path');
-const cors = require('cors'); // Importer le middleware CORS
-const userRoutes = require('./routes/userRoutes');
-const bookRoutes = require('./routes/bookRoutes');
-
+//CRÉATION DE L'APPLICATION EXPRESS
 const app = express();
 
-// Utiliser CORS pour autoriser les requêtes cross-origin
-app.use(cors());
+//ACCÈS AU PATH DU SERVEUR
+const path = require('path');
 
+//CHARGEMENT VARIABLES D'ENVIRONNEMENT
+require('dotenv').config();
+
+//IMPORTATION DES ROUTES POUR LES LIVRES ET LES UTILISATEURS
+const bookRoutes = require("./routes/bookRouter");
+const userRoutes = require("./routes/userRouter");
+
+//IMPORTATION DU MODULE MONGOOSE POUR LA CONNEXION À LA BASE DE DONNÉES MONGODB
+const mongoose = require('mongoose');
+
+//CONNEXION À LA BASE DE DONNÉES
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('Connexion à MongoDB réussie !'))
+  .catch(() => console.log('Connexion à MongoDB échouée !'));
+
+//REMPLACEMENT DE BODY PARSER POUR ACCÉDER AU CORPS DE LA REQUÊTE
 app.use(express.json());
 
-// Connexion MongoDB (toujours en dur comme vous l'avez demandé)
-mongoose.connect(
-  'mongodb+srv://Mongotest:Mongotest@cluster0.4rsri.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
-)
-  .then(() => console.log('Connexion à MongoDB réussie !'))
-  .catch((error) => console.log('Connexion à MongoDB échouée :', error));
-
-// Utiliser les routes pour les utilisateurs
-app.use('/api/auth', userRoutes);
-
-// Utiliser les routes pour les livres
-app.use('/api/books', bookRoutes);
-
-// Servir les images statiques
-app.use('/images', express.static(path.join(__dirname, 'images')));
-
-// Gérer les erreurs 404
+//MIDDLEWARE POUR GÉRER LES CORS
 app.use((req, res, next) => {
-  res.status(404).json({ message: 'Route non trouvée !' });
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' data:;");
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  next();
 });
 
+//UTILISATION DES ROUTES POUR LES IMAGES, LES LIVRES ET LES UTILISATEURS
+app.use('/api/books', bookRoutes);
+app.use('/api/auth', userRoutes);
+app.use('/images', express.static(path.join(__dirname, 'images')));
+
+//EXPORTATION DE L'APPLICATION
 module.exports = app;

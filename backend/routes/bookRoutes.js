@@ -1,22 +1,45 @@
-const express = require('express');
+//IMPORTATION DU MODULE EXPRESS
+const express = require("express");
+
+//CONTROLLER
+const bookController = require("../controllers/bookController");
+
+//IMPORTATION MIDDLEWARE AUTH
+const auth = require("../middleware/auth");
+
+/* MULTER - IMPORTATION MIDDLEWARE UPLOAD & MODIFICATIONIMAGE*/
+
+    const {upload, modificationImage} = require('../middleware/multer-config');
+    
+/* FIN MULTER */
+
+//CRÉATION D'UN ROUTEUR EXPRESS
 const router = express.Router();
-const bookController = require('../controllers/book');
-const userIdMiddleware = require('../controllers/userId');
-const multer = require('../middleware/multer');
 
-// Route pour ajouter un livre
-router.post('/', userIdMiddleware, multer, bookController.createBook);
+/* MÉTHODES */
 
-// Route pour récupérer tous les livres
-router.get('/', bookController.getAllBooks);
+    //RÉCUPÉRATION DE TOUS LES LIVRES
+    router.get("/", bookController.getAllBooks);
 
-// Route pour récupérer un livre par ID
-router.get('/:id', bookController.getBookById);
+    //RÉCUPÉRATION DES TROIS LIVRES LES MIEUX NOTÉS
+    router.get("/bestrating", bookController.getBestThree);
 
-// Route pour modifier un livre
-router.put('/:id', userIdMiddleware, multer, bookController.updateBook);
+    //RÉCUPÉRATION D'UN LIVRE
+    router.get("/:id", bookController.getBook);
 
-// Route pour supprimer un livre
-router.delete('/:id', userIdMiddleware, bookController.deleteBook);
+    //ENREGISTREMENT D'UN LIVRE
+    router.post("/", auth, upload, modificationImage, bookController.createBook);
 
+    //MISE À JOUR D'UN LIVRE
+    router.put("/:id", auth, upload, modificationImage, bookController.updateBook);
+
+    //SUPPRESSION D'UN LIVRE
+    router.delete("/:id", auth, bookController.deleteBook);
+
+    //NOTATION D'UN LIVRE
+    router.post("/:id/rating", auth, bookController.rateBook);
+
+/* FIN MÉTHODES */
+
+//EXPORTATION DU ROUTEUR
 module.exports = router;
