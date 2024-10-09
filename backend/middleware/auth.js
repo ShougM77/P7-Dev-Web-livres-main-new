@@ -1,27 +1,24 @@
 const jwt = require("jsonwebtoken");
 
-module.exports = (req,res,next) => {
-
-    try 
-    {
-        //RÉCUPÉRATION DU TOKEN
+module.exports = (req, res, next) => {
+    try {
+        // récupération du token
         const token = req.headers.authorization.split(" ")[1];
 
-        //DÉCODAGE DU TOKEN
+        // décodage du token
         const decodedToken = jwt.verify(token, "RANDOM_TOKEN_SECRET");
 
-        //RÉCUPÉRATION DE L'USER ID
+        // récupération de l'userId
         const userId = decodedToken.userId;
 
-        //AJOUT À L'OBJET REQUEST QUI EST TRANSMIS AUX ROUTES PAR LA SUITE
+        // ajout à l'objet req
         req.auth = {
             userId: userId,
-        }
+        };
 
         next();
     } 
-    catch(error)
-    {
-        res.status(401).json( {error} )    
+    catch (error) {
+        res.status(401).json({ error });
     }
-}
+};
